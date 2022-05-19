@@ -113,14 +113,6 @@ namespace mem
         typename std::enable_if<!std::is_reference<T>::value, typename std::add_lvalue_reference<T>::type>::type
         rcast() & noexcept;
 
-        template <typename Container>
-        constexpr pointer put_bytes(const Container& obj) const noexcept {
-            using value_t = typename Container::value_type;
-            constexpr auto size_e  = sizeof uint8_t;
-            region(*this, size_e * std::size(obj)).copy(std::data(obj));
-            return *this;
-        }
-
         template <typename Func>
         constexpr pointer and_then(Func&& func) const;
 
