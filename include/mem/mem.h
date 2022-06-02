@@ -114,11 +114,15 @@ namespace mem
         typename std::enable_if<!std::is_reference<T>::value, typename std::add_lvalue_reference<T>::type>::type
         rcast() & noexcept;
 
-        template <typename Container>
-        constexpr pointer put_bytes(const Container& obj) const noexcept {
-            using value_t = typename Container::value_type;
-            constexpr auto size_e  = sizeof(value_t);
-            region(*this, size_e * obj.size()).copy(obj.data());
+        template <typename T>
+        constexpr pointer put_bytes(const T& obj) const noexcept;
+
+        template <typename Func>
+        constexpr std::enable_if_t<std::is_void_v<std::invoke_result_t<Func>>, pointer> 
+        or_else(Func&& func) const
+        {
+            if (!value_) 
+                std::forward<Func>(func)();
             return *this;
         }
 
@@ -388,6 +392,13 @@ namespace mem
         pointer::as() const noexcept
     {
         return *reinterpret_cast<typename std::add_pointer<T>::type>(value_);
+    }
+
+    template <typename T>
+    MEM_STRONG_INLINE
+    constexpr pointer pointer::put_bytes(const T& obj) const noexcept {
+        region(*this, sizeof(typename T::value_type) * obj.size()).copy(obj.data());
+        return *this;
     }
 
     template <typename T>
